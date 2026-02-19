@@ -98,8 +98,13 @@ Railway (PostgreSQL)          Vercel (Next.js)
 
 ## 5. Troubleshooting
 
+- **Build gagal: `npm install` / TAR_ENTRY_ERROR / ECONNRESET**  
+  - Repo sudah pakai **`vercel.json`** dengan `installCommand: "npm ci"` dan **`.npmrc`** (retry + timeout) agar install lebih stabil.  
+  - Di Vercel: **Project → Settings → General** → **Build Cache** → **Clear** → lalu **Redeploy**.  
+  - Pastikan **`package-lock.json`** ikut di-commit. Kalau build tetap gagal, di Vercel **Settings → Environment** ubah **Install Command** jadi kosong (pakai default `npm install`) dan coba deploy lagi.
+
 - **Build gagal / Prisma client not found**  
-  Pastikan `postinstall`: `prisma generate` ada di `package.json` dan **Install Command** di Vercel tidak menimpa install (biarkan default).
+  Pastikan `postinstall`: `prisma generate` ada di `package.json` dan **Install Command** di Vercel tidak menimpa install (default atau `npm ci`).
 
 - **Database connection error di production**  
   - Cek `DATABASE_URL` di Vercel (Production) sama dengan yang di Railway.  
