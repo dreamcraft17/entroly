@@ -9,10 +9,12 @@ generator client {
   engineType = "library"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./erd.svg"
-}
+// ERD generator dinonaktifkan agar build Vercel/Railway tidak butuh Puppeteer.
+// Untuk generate erd.svg lokal: uncomment block di bawah, jalankan prisma generate, lalu comment lagi.
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "./erd.svg"
+// }
 
 datasource db {
   provider = "postgresql"

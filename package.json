@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "prisma generate && next build",
     "build:server": "next build && pm2 restart entroly",
     "start": "next start",
     "lint": "eslint",
