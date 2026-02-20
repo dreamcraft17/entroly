@@ -4,6 +4,22 @@ Panduan singkat deploy app ke **Vercel** (frontend + API) dan/atau **Railway** (
 
 ---
 
+## Ready to deploy – ceklist
+
+Sebelum deploy, pastikan:
+
+| Cek | Lokal (dev) | Vercel / Railway (production) |
+|-----|-------------|-------------------------------|
+| **Env** | File **`.env.local`** ada (copy dari `.env.example` kalau belum). Isi: `DATABASE_URL`, `JWT_PUBLIC_KEY`, `AUTH_URL`, `NEXT_PUBLIC_SSO_URL`. | Set semua env di **Project → Settings → Environment Variables**. |
+| **Database** | `DATABASE_URL` valid. Jalankan sekali: `npx prisma migrate deploy`. | `DATABASE_URL` dari Railway/Neon/Supabase. Migrasi jalan otomatis (Railway: preDeploy) atau jalankan manual sekali. |
+| **SSO** | `JWT_PUBLIC_KEY` = public key dari SSO. `NEXT_PUBLIC_SSO_URL` = URL SSO. | Sama. Pastikan domain Entroly & SSO satu induk (mis. `.entro.ly`) agar cookie login terbaca. |
+| **URL** | `AUTH_URL` = `http://localhost:3000`. | `AUTH_URL` = URL production (mis. `https://entro.ly` atau `https://xxx.vercel.app`). |
+| **Build** | `npm run build` atau `npm run vercel-build` sukses. | Vercel pakai `vercel-build`; Railway pakai `build`. Konfig ada di `vercel.json` / `railway.json`. |
+
+- **`.env.local`** sudah ada di folder `Entroly` (template); isi nilai asli lalu simpan. File ini tidak di-commit (aman).
+
+---
+
 ## Langkah deploy (step-by-step)
 
 ### Opsi A: Deploy di Vercel
@@ -141,7 +157,25 @@ Railway Project
 
 ---
 
-## 5. NPM scripts (referensi)
+## 5. SSO ↔ Entroly: Apakah sudah terhubung?
+
+**Ya.** Setelah env dan domain diatur benar, alurnya:
+
+1. User buka halaman yang dilindungi di Entroly (mis. `/dashboard` atau `/create`) → belum login → **redirect ke SSO** (`NEXT_PUBLIC_SSO_URL/login?redirect=<AUTH_URL>/dashboard`).
+2. User **login di SSO** (email/password atau TikTok OAuth).
+3. SSO meng-set cookie **`sso_access_token`** dengan **domain `.entro.ly`** (production), lalu redirect ke URL `redirect` tadi (kembali ke Entroly).
+4. Browser mengirim cookie itu ke **Entroly** (karena sama-sama di bawah `*.entro.ly`).
+5. Entroly **memverifikasi JWT** dengan `JWT_PUBLIC_KEY` (public key dari SSO) → user dianggap **sudah login di Entroly**.
+
+**Syarat agar “login via SSO = sudah login di Entroly”:**
+
+- **Domain induk sama:** SSO dan Entroly harus pakai domain yang satu induk, mis. SSO = `sso.entro.ly`, Entroly = `entro.ly` atau `app.entro.ly`. Cookie SSO di-set dengan `domain: ".entro.ly"` agar bisa dibaca oleh Entroly.
+- **Kalau deploy Entroly di Vercel:** URL default (`*.vercel.app`) **tidak** satu domain dengan SSO, jadi cookie SSO tidak terkirim. **Wajib pakai custom domain** (mis. `entro.ly` atau `app.entro.ly`) di Vercel/Railway dan set **AUTH_URL** ke URL production itu.
+- **Env:** `JWT_PUBLIC_KEY` di Entroly = public key dari key pair yang dipakai SSO; `NEXT_PUBLIC_SSO_URL` = URL SSO; `AUTH_URL` = URL production Entroly (untuk redirect setelah login).
+
+---
+
+## 6. NPM scripts (referensi)
 
 | Script | Kegunaan |
 |--------|----------|
@@ -154,7 +188,7 @@ Railway Project
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 - **Build gagal: `npm install` / TAR_ENTRY_ERROR / ECONNRESET**  
   - Repo pakai **`vercel.json`** (`installCommand: "npm ci"`) dan **`.npmrc`** (retry + timeout).  
